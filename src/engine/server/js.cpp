@@ -1,4 +1,3 @@
-#include <base/system.h>
 #include <engine/console.h>
 #include <engine/storage.h>
 #include <v8.h>
@@ -20,10 +19,26 @@ void CJs::Init(IConsole *pConsole, IStorage *pStorage)
 
 	HandleScope pScope;
 
-	Handle<ObjectTemplate> pGlobalTemplate = ObjectTemplate::New();
+	Handle<ObjectTemplate> globalTemplate = ObjectTemplate::New();
+	Persistent<Context> context = Context::New(0, globalTemplate);
+	Context::Scope contextScope(context);
 
-	Persistent<Context> pContext = Context::New(0, pGlobalTemplate);
-	Context::Scope pContextScope(pContext);
+	auto global = context->Global();
+
+	auto jsConsolePrint = FunctionTemplate::New([](const Arguments& args) -> Handle<Value>
+	{
+		if (args.Length() < 1) return v8::Undefined();
+		HandleScope scope;
+		Handle<Value> arg = args[0];
+		String::Utf8Value value(arg);
+		dbg_msg("js", *value);
+		return v8::Undefined();
+	});
+
+	auto jsConsole = Object::New();
+	jsConsole->Set(String::NewSymbol("print"), jsConsolePrint->GetFunction());
+
+	global->Set(String::NewSymbol("console"), jsConsole);
 
 	LoadFiles();
 }
@@ -77,4 +92,6 @@ int CJs::LoadScript(const char *pFilename)
 	Handle<Script> script = Script::Compile(source);
 
 	script->Run();
+
+	return 0;
 }
