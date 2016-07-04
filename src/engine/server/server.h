@@ -5,6 +5,7 @@
 
 #include <engine/server.h>
 
+#include "js.h"
 
 class CSnapIDPool
 {
@@ -157,6 +158,7 @@ public:
 	CDemoRecorder m_DemoRecorder;
 	CRegister m_Register;
 	CMapChecker m_MapChecker;
+	CJs m_Js;
 
 	CServer();
 
